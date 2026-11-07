@@ -1,0 +1,2 @@
+# Additional root deployment-suite dependency; application itself does not need PyYAML.
+PyYAML==6.0.3

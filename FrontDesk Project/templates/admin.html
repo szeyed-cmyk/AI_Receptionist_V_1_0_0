@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · FrontDesk AI{% endblock %}
+{% block heading %}Good day, administrator{% endblock %}
+{% block subheading %}Here’s what’s happening at {{ business_name }} today.{% endblock %}
+{% block content %}
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-7">
+  {% for label,value,note,color in [('Today’s appointments',today_count,'Scheduled for today','#5064eb'),('Upcoming bookings',upcoming_count,'Confirmed future visits','#16ad9a'),('New conversations',conv_count,'Across your visitor inbox','#8870d6'),('Knowledge answers',kb_count,'Active and draft responses','#d99249')] %}
+  <div class="card p-5 relative overflow-hidden">
+    <div class="flex justify-between items-start"><span class="text-[12px] text-slate-500 font-medium">{{ label }}</span><span class="w-2.5 h-2.5 rounded-full mt-1" style="background:{{color}}"></span></div>
+    <div class="text-[32px] leading-tight font-semibold tracking-tight mt-3">{{ value }}</div><p class="text-[11px] text-slate-400 mt-2">{{ note }}</p>
+  </div>
+  {% endfor %}
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-6 mb-7">
+  <section class="card p-5 sm:p-6">
+    <div class="flex items-start justify-between"><div><h2 class="font-semibold text-[15px]">Conversation activity</h2><p class="text-xs text-slate-400 mt-1">New website conversations over the last seven days</p></div><span class="pill completed">7 DAYS</span></div>
+    <div class="flex items-end gap-2 sm:gap-4 h-[182px] mt-8 pt-3" role="img" aria-label="Seven day conversation activity: {% for a in activity %}{{ a.label }} {{ a.count }}. {% endfor %}">
+      {% for a in activity %}<div class="flex flex-col flex-1 min-w-0 h-full items-center gap-2"><span class="text-[10px] text-slate-500">{{ a.count }}</span><div class="w-full flex items-end flex-1 max-w-12"><div class="w-full rounded-t-md bg-brand-500/90 {% if a.count == 0 %}!h-1 !bg-slate-200{% endif %}" style="height: {{ (a.count / max_activity * 100)|round|int }}%; min-height: 4px" title="{{ a.label }}: {{ a.count }}"></div></div><span class="text-[10px] text-slate-400 uppercase">{{ a.label }}</span></div>{% endfor %}
+    </div>
+  </section>
+  <section class="card p-5 sm:p-6">
+    <h2 class="font-semibold text-[15px]">Receptionist at a glance</h2><p class="text-xs text-slate-400 mt-1">Based on your current database records</p>
+    <div class="mt-6 space-y-6">
+      <div><div class="flex justify-between text-xs mb-2"><span class="text-slate-500">Conversations with a booking</span><strong>{{ conversion }}%</strong></div><div class="progress"><span style="width:{{conversion}}%"></span></div><p class="text-[11px] text-slate-400 mt-2">Includes completed and confirmed bookings</p></div>
+      <div class="grid grid-cols-2 gap-4 pt-3 border-t border-slate-100"><div><span class="text-xs text-slate-500">Completed visits</span><div class="text-xl font-semibold mt-2">{{completed_count}}</div></div><div><span class="text-xs text-slate-500">Bookings this month</span><div class="text-xl font-semibold mt-2">{{this_month}}</div></div><div><span class="text-xs text-slate-500">Total messages</span><div class="text-xl font-semibold mt-2">{{msg_count}}</div></div><div><span class="text-xs text-slate-500">All appointments</span><div class="text-xl font-semibold mt-2">{{appt_count}}</div></div></div>
+    </div>
+  </section>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-6">
+  <section class="card">
+    <div class="p-5 sm:px-6 border-b border-slate-100 flex justify-between items-center"><div><h2 class="font-semibold text-[15px]">Next appointments</h2><p class="text-xs text-slate-400 mt-1">Your upcoming confirmed schedule</p></div><a class="text-xs font-medium text-brand-600 hover:text-brand-700" href="/admin/appointments">View all <span aria-hidden="true">→</span></a></div>
+    <div class="divide-y divide-slate-100">
+    {% for a in upcoming %}<a href="/admin/appointments" class="flex gap-3 sm:gap-4 p-4 sm:px-6 hover:bg-slate-50 items-center"><span class="avatar">{{ a.customer_name[:2]|upper }}</span><div class="min-w-0 flex-1"><div class="text-[13px] font-medium truncate">{{ a.customer_name }}</div><div class="text-[11px] text-slate-400 mt-1 truncate">{{ a.service or 'Appointment' }}</div></div><div class="text-right shrink-0"><div class="text-xs font-medium">{{ a.appointment_time.strftime('%d %b') }}</div><div class="text-[11px] text-slate-400 mt-1">{{ a.appointment_time.strftime('%I:%M %p') }}</div></div><span class="pill confirmed hidden sm:inline-flex">{{a.status}}</span></a>
+    {% else %}<div class="empty">No upcoming confirmed bookings. The schedule is ready for new appointments.</div>{% endfor %}
+    </div>
+  </section>
+  <section class="card">
+    <div class="p-5 sm:px-6 border-b border-slate-100 flex justify-between items-center"><div><h2 class="font-semibold text-[15px]">Latest conversations</h2><p class="text-xs text-slate-400 mt-1">Follow up with your visitors</p></div><a href="/admin/conversations" class="text-xs font-medium text-brand-600">Inbox →</a></div>
+    <div class="divide-y divide-slate-100">
+    {% for c in recent %}<a href="/admin/conversations/{{c.id}}" class="p-4 sm:px-6 flex gap-3 items-center hover:bg-slate-50"><span class="avatar !bg-violet-50 !text-violet-600">{{ loop.index }}</span><div class="min-w-0"><p class="truncate text-[13px] font-medium">{{ c.customer_name or 'Web visitor' }}</p><p class="text-[11px] text-slate-400 mt-1">{{ c.messages|length }} message{% if c.messages|length != 1 %}s{% endif %} · {{ c.updated_at.strftime('%d %b %H:%M') }}</p></div><span class="ml-auto text-slate-300">→</span></a>
+    {% else %}<div class="empty">No conversations yet. Open the visitor chat to see how it works.</div>{% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}
