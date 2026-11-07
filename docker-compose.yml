@@ -1,0 +1,33 @@
+# Run from the archive root:
+#   1. cp .env.example .env
+#   2. edit .env: set SECRET_KEY (and SETUP_TOKEN for first-run /admin/setup)
+#   3. docker compose up --build
+# Compose reads ./.env for env_file and interpolation. Builds the single root Dockerfile.
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-10000}:10000"
+    env_file:
+      - .env
+    environment:
+      - PORT=10000
+      - DATABASE_URL=${DATABASE_URL:-}
+      - SECRET_KEY=${SECRET_KEY:?Set SECRET_KEY in .env - see .env.example}
+      - SETUP_TOKEN=${SETUP_TOKEN:-}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - HTTPS_ONLY=${HTTPS_ONLY:-false}
+      - DEMO_MODE=${DEMO_MODE:-false}
+      - DEMO_SEED=${DEMO_SEED:-review-v1}
+      - DEMO_MAX_SESSIONS=${DEMO_MAX_SESSIONS:-200}
+      - AI_BASE_URL=${AI_BASE_URL:-}
+      - AI_API_KEY=${AI_API_KEY:-}
+      - AI_MODEL=${AI_MODEL:-}
+      - BUSINESS_NAME=${BUSINESS_NAME:-}
+      - BUSINESS_TIMEZONE=${BUSINESS_TIMEZONE:-}
+    volumes:
+      - "./FrontDesk Project/data:/app/data"
+    restart: unless-stopped

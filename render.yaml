@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: frontdesk-ai
+    runtime: docker
+    rootDir: .
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    numInstances: 1
+    healthCheckPath: /health
+    envVars:
+      # Render's generateValue produces a base64-encoded random 256-bit value
+      # when the variable is new; an existing value is retained on later syncs.
+      - key: SECRET_KEY
+        generateValue: true
+      - key: HTTPS_ONLY
+        value: "true"
+      - key: DEMO_MODE
+        value: "false"
+      - key: DEMO_SEED
+        value: "review-v1"
+      - key: DEMO_MAX_SESSIONS
+        value: "200"
+      # DATABASE_URL sync:false asks during initial creation rather than
+      # auto-unsetting it. For a blank default leave that prompt empty: SQLite
+      # uses /app/data. Later Environment changes must be entered manually.
+      # Production needs a persistent disk at /app/data or a separately managed DB.
+      - key: SETUP_TOKEN
+        sync: false
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: AI_BASE_URL
+        sync: false
+      - key: AI_API_KEY
+        sync: false
+      - key: AI_MODEL
+        sync: false
